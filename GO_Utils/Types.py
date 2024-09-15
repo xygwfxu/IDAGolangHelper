@@ -1,6 +1,5 @@
 from . import Utils
 import ida_bytes
-import ida_struct
 import idc
 
 class GoTypes_BASE(object):
@@ -426,7 +425,7 @@ class TypeProcessing(object):
 
 
     def getName(self, offset):
-        sid = ida_struct.get_struc_id("type")
+        sid = idc.get_struc_id("type")
         string_addr = offset + idc.get_member_offset(sid, "string")
         ptr = self.stepper.ptr(string_addr)
         idc.SetType(ptr, "string")
@@ -434,7 +433,7 @@ class TypeProcessing(object):
         return idc.GetString(name)
 
     def getKindEnumName(self, addr):
-        struc_id = ida_struct.get_struc_id("type")
+        struc_id = idc.get_struc_id("type")
         offset_kind = idc.get_member_offset(struc_id, "kind")
         kind = idc.get_wide_byte(addr + offset_kind) & 0x1f
         return self.settings.typer.standardEnums[0][1][kind]
@@ -460,7 +459,7 @@ class TypeProcessing(object):
         name = Utils.relaxName(name)
         Utils.rename(offset, name)
         self.betterTypePlease(offset)
-        sid = ida_struct.get_struc_id("type")
+        sid = idc.get_struc_id("type")
         addr = self.getPtrToThis(sid, offset)
         if addr != 0:
             addr = self.getOffset(addr)
@@ -476,19 +475,19 @@ class TypeProcessing(object):
 
     def makeChanType(self, offset):
         idc.SetType(offset, "chanType")
-        sid = ida_struct.get_struc_id("chanType")
+        sid = idc.get_struc_id("chanType")
         addr = self.getPtr(sid, offset, "elem")
         self.handle_offset(addr)
 
     def makeSliceType(self, offset):
         idc.SetType(offset, "sliceType")
-        sid = ida_struct.get_struc_id("sliceType")
+        sid = idc.get_struc_id("sliceType")
         addr = self.getPtr(sid, offset, "elem")
         self.handle_offset(addr)
 
     def makeArrType(self, offset):
         idc.SetType(offset, "arrayType")
-        sid = ida_struct.get_struc_id("arrayType")
+        sid = idc.get_struc_id("arrayType")
         addr = self.getPtr(sid, offset, "elem")
         self.handle_offset(addr)
         addr = self.getPtr(sid, offset, "slice")
@@ -496,14 +495,14 @@ class TypeProcessing(object):
 
     def makePtrType(self, offset):
         idc.SetType(offset, "ptrType")
-        sid = ida_struct.get_struc_id("ptrType")
+        sid = idc.get_struc_id("ptrType")
         addr = self.getPtr(sid, offset, "elem")
         self.handle_offset(addr)
 
     def makeStructType(self, offset):
         idc.SetType(offset, "structType")
-        sid = ida_struct.get_struc_id("structType")
-        slice_id = ida_struct.get_struc_id("slice")
+        sid = idc.get_struc_id("structType")
+        slice_id = idc.get_struc_id("slice")
         offset_elem = idc.get_member_offset(sid, "fields")
         inner_offset = idc.get_member_offset(slice_id, "data")
         addr = self.stepper.ptr(offset_elem + offset + inner_offset)
@@ -513,9 +512,9 @@ class TypeProcessing(object):
         if size == 0:
             return
         idc.SetType(addr, "structField")
-        sz = ida_struct.get_struc_size(ida_struct.get_struc_id("structField"))
+        sz = idc.get_struc_size(idc.get_struc_id("structField"))
         self.make_arr(addr, size, sz, "structField")
-        sid_type = ida_struct.get_struc_id("type")
+        sid_type = idc.get_struc_id("type")
         size_new_struct = self.getPtr(sid_type, offset, "size")
         for i in range(size):
             self.processStructField(addr, i*sz)
@@ -528,7 +527,7 @@ class TypeProcessing(object):
 
     def processStructField(self, addr, index):
         offset = addr + index
-        sid = ida_struct.get_struc_id("structField")
+        sid = idc.get_struc_id("structField")
         ptr = self.getPtr(sid, offset, "Name")
         if ptr != 0:
             idc.SetType(ptr, "string")
@@ -543,9 +542,9 @@ class TypeProcessing(object):
         
     def createUserTypeStruct(self, addr, name, size, self_size):
         fields = []
-        sid = ida_struct.get_struc_id("structField")
-        sz = ida_struct.get_struc_size(sid)
-        sid_type = ida_struct.get_struc_id("type")
+        sid = idc.get_struc_id("structField")
+        sz = idc.get_struc_size(sid)
+        sid_type = idc.get_struc_id("type")
         fields = []
         curr_offset = 0
         idc.set_cmt(addr, name, 0)
@@ -595,15 +594,15 @@ class TypeProcessing(object):
                 curr_offset += 1    
         new_type = [(name, fields)]
         self.settings.structCreator.createTypes(new_type)
-        new_type_sid = ida_struct.get_struc_id(name)
-        sz = ida_struct.get_struc_size(new_type_sid)
+        new_type_sid = idc.get_struc_id(name)
+        sz = idc.get_struc_size(new_type_sid)
         if sz != self_size:
             print("%x" % addr   )
             raise("Error at creating structure")
     
     def getType(self, addr):
         print("%x" % addr)
-        sid = ida_struct.get_struc_id("type")
+        sid = idc.get_struc_id("type")
         name = self.getName(addr)
         if self.getKindEnumName(addr) != "PTR":
             while name[0] == "*":
@@ -612,15 +611,15 @@ class TypeProcessing(object):
 
     def makeInterface(self, offset):
         idc.SetType(offset, "interfaceType")
-        ifaceid = ida_struct.get_struc_id("interfaceType")
+        ifaceid = idc.get_struc_id("interfaceType")
         meth_offs = idc.get_member_offset(ifaceid, "methods")
-        slice_id = ida_struct.get_struc_id("slice")
+        slice_id = idc.get_struc_id("slice")
         size_off = idc.get_member_offset(slice_id, "len")
         size = self.stepper.ptr(offset + meth_offs + size_off)
         if size != 0:
             addr = self.getPtr(slice_id, offset + meth_offs, "data")
             idc.SetType(addr, "imethod")
-            sz = ida_struct.get_struc_size(ida_struct.get_struc_id("imethod"))
+            sz = idc.get_struc_size(idc.get_struc_id("imethod"))
             self.make_arr(addr, size, sz, "imethod")
             names = self.processIMethods(addr, size)
             # For now only for go1.7
@@ -678,7 +677,7 @@ class TypeProcessing17(TypeProcessing):
         return out
 
     def getName(self, offset):
-        sid = ida_struct.get_struc_id("type")
+        sid = idc.get_struc_id("type")
         name_off = self.getDword(sid, offset, "string")
         string_addr = self.getOffset(name_off) + 3
         ln = idc.get_wide_byte(string_addr-1)
@@ -694,7 +693,7 @@ class TypeProcessing17(TypeProcessing):
 
     def processStructField(self, addr, index):
         offset = addr + index
-        sid = ida_struct.get_struc_id("structField")
+        sid = idc.get_struc_id("structField")
         ptr = self.getPtr(sid, offset, "Name")
         ln = idc.get_wide_byte(ptr + 2)
         fieldName = self.get_str(ptr + 3, ln)
@@ -703,7 +702,7 @@ class TypeProcessing17(TypeProcessing):
         self.handle_offset(ptr)
 
     def processIMethods(self, offst, size):
-        sz = ida_struct.get_struc_size(ida_struct.get_struc_id("imethod"))
+        sz = idc.get_struc_size(idc.get_struc_id("imethod"))
         comm = []
         for i in range(size):
             comm.append(self.processIMethod(offst + i * sz))
@@ -711,14 +710,14 @@ class TypeProcessing17(TypeProcessing):
         return comm
 
     def processIMethod(self, offst):
-        sid = ida_struct.get_struc_id("imethod")
+        sid = idc.get_struc_id("imethod")
         name = self.getDword(sid, offst, "name")
         name += self.robase
         name = self.get_str(name + 3, idc.get_wide_byte(name + 2))
         return name
 
     def processMethods(self, offst):
-        sid = ida_struct.get_struc_id("method__")
+        sid = idc.get_struc_id("method__")
         name = self.getDword(sid, offst, "name")
         name += self.robase
         name = self.get_str(name + 3, idc.get_wide_byte(name + 2))
@@ -732,7 +731,7 @@ class TypeProcessing17(TypeProcessing):
 
     def makeMap(self, offset):
         idc.SetType(offset, "mapType")
-        sid = ida_struct.get_struc_id("mapType")
+        sid = idc.get_struc_id("mapType")
         addr = self.getPtr(sid, offset, "key")
         self.handle_offset(addr)
         addr = self.getPtr(sid, offset, "elem")
@@ -744,10 +743,10 @@ class TypeProcessing17(TypeProcessing):
 
     def parseFuncType(self, offset):
         return
-        sid = ida_struct.get_struc_id("funcType")
+        sid = idc.get_struc_id("funcType")
         in_size = idc.Word(offset + idc.get_member_offset(sid, "incount"))
         out_size = idc.Word(offset + idc.get_member_offset(sid, "outcount"))
-        sz = ida_struct.get_struc_size(sid)
+        sz = idc.get_struc_size(sid)
         for i in range(in_size + out_size):
             idc.SetType(offset + sz + i * self.stepper.size, "type *")
 
@@ -772,7 +771,7 @@ class TypeProcessing116(TypeProcessing19):
     
     def makeMap(self, offset):
         idc.SetType(offset, "mapType")
-        sid = ida_struct.get_struc_id("mapType")
+        sid = idc.get_struc_id("mapType")
         addr = self.getPtr(sid, offset, "key")
         self.handle_offset(addr)
         addr = self.getPtr(sid, offset, "elem")
@@ -828,7 +827,7 @@ class TypeProcessing117(TypeProcessing116):
 
     def makeMap(self, offset):
         idc.SetType(offset, "mapType")
-        sid = ida_struct.get_struc_id("mapType")
+        sid = idc.get_struc_id("mapType")
         addr = self.getPtr(sid, offset, "key")
         self.handle_offset(addr)
         addr = self.getPtr(sid, offset, "elem")
@@ -838,7 +837,7 @@ class TypeProcessing117(TypeProcessing116):
 
     def processStructField(self, addr, index):
         offset = addr + index
-        sid = ida_struct.get_struc_id("structField")
+        sid = idc.get_struc_id("structField")
         ptr = self.getPtr(sid, offset, "Name")
         ln = idc.get_wide_byte(ptr + 1)
         fieldName = self.get_str(ptr + 2, ln)
@@ -850,13 +849,13 @@ class TypeProcessing117(TypeProcessing116):
         return self.get_str_from_struct(offset)
 
     def getName(self, offset):
-        sid = ida_struct.get_struc_id("type")
+        sid = idc.get_struc_id("type")
         name_off = self.getDword(sid, offset, "string")
         string_addr = self.getOffset(name_off)
         return self.get_str_from_struct(string_addr)
 
     def processIMethod(self, offst):
-        sid = ida_struct.get_struc_id("imethod")
+        sid = idc.get_struc_id("imethod")
         name = self.getDword(sid, offst, "name")
         name += self.robase
         return self.get_str_from_struct(name)
@@ -864,9 +863,9 @@ class TypeProcessing117(TypeProcessing116):
     def makeInterface(self, offset):
         print('creating interface {:x}'.format(offset))
         idc.SetType(offset, "interfaceType")
-        ifaceid = ida_struct.get_struc_id("interfaceType")
+        ifaceid = idc.get_struc_id("interfaceType")
         meth_offs = idc.get_member_offset(ifaceid, "methods")
-        slice_id = ida_struct.get_struc_id("slice")
+        slice_id = idc.get_struc_id("slice")
         size_off = idc.get_member_offset(slice_id, "len")
         size = self.stepper.ptr(offset + meth_offs + size_off)
 
@@ -881,7 +880,7 @@ class TypeProcessing117(TypeProcessing116):
         if size > 0:
             addr = self.getPtr(slice_id, offset + meth_offs, "data")
             idc.SetType(addr, "imethod")
-            sz = ida_struct.get_struc_size(ida_struct.get_struc_id("imethod"))
+            sz = idc.get_struc_size(idc.get_struc_id("imethod"))
             self.make_arr(addr, size, sz, "imethod")
             names = self.processIMethods(addr, size)
             if names is None:
@@ -903,9 +902,9 @@ class TypeProcessing117(TypeProcessing116):
     def createUserTypeStruct(self, addr, name, size, self_size):
         print('creating struct {}'.format(name))
         fields = []
-        sid = ida_struct.get_struc_id("structField")
-        sz = ida_struct.get_struc_size(sid)
-        sid_type = ida_struct.get_struc_id("type")
+        sid = idc.get_struc_id("structField")
+        sz = idc.get_struc_size(sid)
+        sid_type = idc.get_struc_id("type")
         fields = []
         curr_offset = 0
         idc.set_cmt(addr, name, 0)
@@ -940,7 +939,7 @@ class TypeProcessing117(TypeProcessing116):
                     name_type = Utils.relaxName(name_type)
                     name_type = "ut_" + name_type
 
-                    if ida_struct.get_struc_id(name_type) != idc.BADADDR:
+                    if idc.get_struc_id(name_type) != idc.BADADDR:
                         print("setting type %s" % name_type)
                         fieldtype = name_type
 
@@ -957,20 +956,20 @@ class TypeProcessing117(TypeProcessing116):
                     name_type = Utils.relaxName(name_type)
                     name_type = "iface_" + name_type
 
-                    if ida_struct.get_struc_id(name_type) != idc.BADADDR:
+                    if idc.get_struc_id(name_type) != idc.BADADDR:
                         fieldtype = name_type
 
                 elif kind_of_type == "CHAN":
                     name_type = 'ut_runtime_hchan'
                     ptr_name_type = f'{name_type} *'
 
-                    if ida_struct.get_struc_id(name_type) != idc.BADADDR:
+                    if idc.get_struc_id(name_type) != idc.BADADDR:
                         fieldtype = ptr_name_type
 
                 elif kind_of_type == "MAP":
                     name_type = 'ut_runtime_hmap'
                     ptr_name_type = f'{name_type} *'
-                    if ida_struct.get_struc_id(name_type) != idc.BADADDR:
+                    if idc.get_struc_id(name_type) != idc.BADADDR:
                         fieldtype = ptr_name_type
 
                 elif kind_of_type == "FUNC":
@@ -984,7 +983,7 @@ class TypeProcessing117(TypeProcessing116):
                     name_type = "ut_" + name_type
                     ptr_name_type = f'{name_type} *'
 
-                    if ida_struct.get_struc_id(name_type) != idc.BADADDR:
+                    if idc.get_struc_id(name_type) != idc.BADADDR:
                         print("setting ptr type %s" % name_type)
                         fieldtype = ptr_name_type
 
@@ -1008,8 +1007,8 @@ class TypeProcessing117(TypeProcessing116):
                 curr_offset += 1    
         new_type = [(name, fields)]
         self.settings.structCreator.createTypes(new_type)
-        new_type_sid = ida_struct.get_struc_id(name)
-        sz = ida_struct.get_struc_size(new_type_sid)
+        new_type_sid = idc.get_struc_id(name)
+        sz = idc.get_struc_size(new_type_sid)
         if sz != self_size:
             print("%x" % addr   )
             raise Exception("Error at creating structure {}. {:x}!={:x}, fields={}".format(name, sz, self_size, fields))

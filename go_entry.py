@@ -3,6 +3,7 @@
 # (c) Hex-Rays
 #
 import GO_Utils
+import idaapi
 idaapi.require("GO_Utils")
 idaapi.require("GO_Utils.Gopclntab")
 idaapi.require("GO_Utils.Utils")
@@ -79,6 +80,8 @@ Go version:
 
 # --------------------------------------------------------------------------
 def ida_main():
+    if not idaapi.get_input_file_path():
+        return
     # Create form
     global f
     idaapi.add_hotkey("Shift-S", GO_Utils.GoStrings.stringify)
@@ -92,6 +95,42 @@ def ida_main():
 
     # Dispose the form
     f.Free()
+
+
+class GoUtilsV9(idaapi.plugin_t):
+
+    flags = idaapi.PLUGIN_HIDE
+    comment = 'A test plugin'
+    help = 'No help - this is just a test'
+    wanted_name = 'Hello World'
+    wanted_hotkey = ''
+
+    def init(self):
+        print('GoUtilsV9 init')
+        
+        # Return KEEP instead of OK to keep the
+        # plugin loaded since it registers
+        # callback actions and hotkeys
+        #
+        # Use OK if the functionality is 
+        # all in the plugin and it does
+        # one thing then completes.
+        return idaapi.PLUGIN_KEEP
+
+    def run(self, arg):
+        print('GoUtilsV9 run')
+
+    def term(self):
+        print('GoUtilsV9 term')
+
+
+def PLUGIN_ENTRY():
+    try:
+        return GoUtilsV9()
+    except Exception as err:
+        import traceback
+        print(err, traceback.format_exc())
+        raise
 
 # --------------------------------------------------------------------------
 

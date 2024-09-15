@@ -1,3 +1,6 @@
+# ChangeLog
+Update to IDA v9 beta
+
 # IDAGolangHelper
 Set of IDA Pro scripts for parsing GoLang types information stored in compiled binary
 

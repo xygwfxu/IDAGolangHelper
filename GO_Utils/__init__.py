@@ -13,6 +13,8 @@ class GoSettings(object):
 
     def __init__(self):
         self.storage = {}
+        if not idaapi.get_input_file_path():
+            return
         self.bt_obj = Utils.get_bitness(ida_ida.inf_get_min_ea())
         self.structCreator = Utils.StructCreator(self.bt_obj)
         self.processor = None
