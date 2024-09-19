@@ -1,5 +1,5 @@
 # ChangeLog
-Update to IDA v9 beta
+Update to IDA v9 beta & Some logic check to elf/pe file.
 
 # IDAGolangHelper
 Set of IDA Pro scripts for parsing GoLang types information stored in compiled binary
