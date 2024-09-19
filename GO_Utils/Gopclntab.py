@@ -7,7 +7,14 @@ import ida_search
 import ida_segment
 from . import  Utils
 
-is_be = idaapi.idainfo.is_be(None)
+try:
+    info = idaapi.get_inf_structure()
+    try:
+        is_be = info.is_be()
+    except:
+        is_be = info.mf
+except AttributeError:
+    is_be = idaapi.idainfo.is_be(None)
 
 lookup = "FF FF FF FB 00 00" if is_be else "FB FF FF FF 00 00"
 lookup16 = "FF FF FF FA 00 00" if is_be else "FA FF FF FF 00 00"

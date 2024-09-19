@@ -13,7 +13,7 @@ idaapi.require("GO_Utils.GoStrings")
 
 from idaapi import Form
 
-GO_SETTINGS = GO_Utils.GoSettings()
+GO_SETTINGS = None
 
 #<pycode(ex_askusingform)>
 # --------------------------------------------------------------------------
@@ -83,7 +83,13 @@ def ida_main():
     if not idaapi.get_input_file_path():
         return
     # Create form
-    global f
+    global f, GO_SETTINGS
+
+    GO_SETTINGS = GO_Utils.GoSettings()
+    GO_SETTINGS.findModuleData()
+    if not (GO_SETTINGS.getVersionByString() or GO_SETTINGS.tryFindGoVersion()):
+        return
+
     idaapi.add_hotkey("Shift-S", GO_Utils.GoStrings.stringify)
     f = MyForm()
 

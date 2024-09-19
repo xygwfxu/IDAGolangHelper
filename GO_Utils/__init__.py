@@ -33,8 +33,9 @@ class GoSettings(object):
         gopcln_addr = self.getVal("gopcln")
         if gopcln_addr is None:
             gopcln_addr = Gopclntab.findGoPcLn()
-            print("Saving gopclntab entry")
-            self.setVal("gopcln", gopcln_addr)
+            if gopcln_addr:
+                print("Saving gopclntab entry", gopcln_addr)
+                self.setVal("gopcln", gopcln_addr)
         return gopcln_addr
 
     def findModuleData(self):
@@ -47,7 +48,8 @@ class GoSettings(object):
     def tryFindGoVersion(self):
         fmd = self.getVal("firstModData")
         if fmd is None:
-            return "This should be go <= 1.4 : No module data found"
+            print("!!!!FIXME!!!!: This should be go <= 1.4 : or Not GOLANG")
+            return
         vers = "go1.5 or go1.6"
         if Firstmoduledata.isGo17(fmd, self.bt_obj) is True:
             vers = "go1.7"
@@ -60,10 +62,11 @@ class GoSettings(object):
 
     def renameFunctions(self):
         gopcln_tab = self.getGopcln()
-        if self.is116:
-            Gopclntab.rename16(gopcln_tab, self.bt_obj)
-        else:
-            Gopclntab.rename(gopcln_tab, self.bt_obj)
+        if gopcln_tab:
+            if self.is116:
+                Gopclntab.rename16(gopcln_tab, self.bt_obj)
+            else:
+                Gopclntab.rename(gopcln_tab, self.bt_obj)
 
     def getVersionByString(self):
         # pos = idautils.Functions().next()
