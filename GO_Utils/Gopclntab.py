@@ -3,7 +3,7 @@ import idautils
 import idaapi
 import ida_bytes
 import ida_funcs
-import ida_search
+import ida_ida
 import ida_segment
 from . import  Utils
 
@@ -43,14 +43,16 @@ def check_is_gopclntab16(addr):
     return False
 
 def findGoPcLn():
-    possible_loc = ida_search.find_binary(0, idc.BADADDR, lookup, 16, idc.SEARCH_DOWN) #header of gopclntab
+    max_ea = ida_ida.inf_get_max_ea()
+    possible_loc = ida_bytes.find_bytes(lookup, 0, max_ea)
     while possible_loc != idc.BADADDR:
         if check_is_gopclntab(possible_loc):
             return possible_loc
         else:
             #keep searching till we reach end of binary
-            possible_loc = ida_search.find_binary(possible_loc+1, idc.BADADDR, lookup, 16, idc.SEARCH_DOWN)
-    possible_loc = ida_search.find_binary(0, idc.BADADDR, lookup16, 16, idc.SEARCH_DOWN) #header of gopclntab
+            possible_loc = ida_bytes.find_bytes(lookup, possible_loc+1, max_ea)
+
+    possible_loc = ida_bytes.find_bytes(lookup16, 0, max_ea)
     while possible_loc != idc.BADADDR:
         print(f"found possible 1.16 gopclntab")
         if check_is_gopclntab16(possible_loc):
@@ -58,7 +60,7 @@ def findGoPcLn():
             return possible_loc
         else:
             #keep searching till we reach end of binary
-            possible_loc = ida_search.find_binary(possible_loc+1, idc.BADADDR, lookup16, 16, idc.SEARCH_DOWN)
+            possible_loc = ida_bytes.find_bytes(lookup16, possible_loc+1, max_ea)
     return None
 
 
